@@ -1,5 +1,5 @@
-import Config from '/config.js'
-import { Context, Canvas } from '/canvas.js'
+import Config from './config.js'
+import { Context, Canvas } from './canvas.js'
 import { DrawSnake } from './draw/snake.js'
 import { Column, Row } from './units.js'
 
