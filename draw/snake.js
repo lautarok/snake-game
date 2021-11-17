@@ -3,9 +3,12 @@ import { Column, Row } from '../units.js'
 
 export const DrawSnake = (snake) => {
 	Context.beginPath()
-	Context.fillStyle = snake.player === 1 ? '#00F' : '#F00'
+	Context.fillStyle = snake.player === 1 ? '#77F' : '#F77'
 	Context.rect(Column(snake.x), Row(snake.y), Column(1), Row(1))
-	Context.fill()	
+	Context.fill()
+
+	Context.beginPath()
+	Context.fillStyle = snake.player === 1 ? '#22F' : '#F22'
 
 	for(let i = 0; i < snake.food.length; i++) {
 		let food = snake.food[i]

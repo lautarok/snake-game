@@ -1,6 +1,7 @@
 import Config from './config.js'
 import { Context, Canvas } from './canvas.js'
 import { DrawSnake } from './draw/snake.js'
+import { DrawGameOver } from './draw/gameOver.js'
 import { Column, Row } from './units.js'
 
 let engineInterval = null
@@ -9,16 +10,28 @@ let snake1 = {
 	x: Config.players < 2 ? 25 : 24,
 	y: 25,
 	direction: null,
-	food: [],
-	player: 1
+	food: [
+		{
+			x: Config.players < 2 ? 25 : 24,
+			y: 26
+		}
+	],
+	player: 1,
+	dead: false
 }
 
 let snake2 = {
 	x: 26,
 	y: 25,
 	direction: null,
-	food: [],
-	player: 2
+	food: [
+		{
+			x: 26,
+			y: 26
+		}
+	],
+	player: 2,
+	dead: false
 }
 
 let activeKeys = {
@@ -41,47 +54,65 @@ let generatedFood = {
 	y: null
 }
 
-const control = (key, active) => {
+const control = (key) => {
 	switch(key) {
 		case Config.controls.up :
-			activeKeys.player1.up = active
+			activeKeys.player1.up = true
+			activeKeys.player1.down = false
+			activeKeys.player1.left = false
+			activeKeys.player1.right = false
 			break
 		case Config.controls.down :
-			activeKeys.player1.down = active
+			activeKeys.player1.down = true
+			activeKeys.player1.up = false
+			activeKeys.player1.left = false
+			activeKeys.player1.right = false
 			break
 		case Config.controls.left :
-			activeKeys.player1.left = active
+			activeKeys.player1.left = true
+			activeKeys.player1.down = false
+			activeKeys.player1.up = false
+			activeKeys.player1.right = false
 			break
 		case Config.controls.right :
-			activeKeys.player1.right = active
+			activeKeys.player1.right = true
+			activeKeys.player1.down = false
+			activeKeys.player1.left = false
+			activeKeys.player1.up = false
 			break
 	}
 
 	if(Config.players > 1) {
 		switch(key) {
 			case Config.controls.up2 :
-				activeKeys.player2.up = active
+				activeKeys.player2.up = true
+				activeKeys.player2.down = false
+				activeKeys.player2.left = false
+				activeKeys.player2.right = false
 				break
 			case Config.controls.down2 :
-				activeKeys.player2.down = active
+				activeKeys.player2.down = true
+				activeKeys.player2.up = false
+				activeKeys.player2.left = false
+				activeKeys.player2.right = false
 				break
 			case Config.controls.left2 :
-				activeKeys.player2.left = active
+				activeKeys.player2.left = true
+				activeKeys.player2.down = false
+				activeKeys.player2.up = false
+				activeKeys.player2.right = false
 				break
 			case Config.controls.right2 :
-				activeKeys.player2.right = active
+				activeKeys.player2.right = true
+				activeKeys.player2.down = false
+				activeKeys.player2.left = false
+				activeKeys.player2.up = false
 				break
 		}
 	}
 }
 
-document.onkeydown = (event) => control(event.key, true)
-document.onkeyup = (event) => control(event.key, false)
-
-const gameOver = () => {
-	alert('Game over')
-	return engineInterval ? clearInterval(engineInterval) : null
-}
+document.onkeydown = (event) => control(event.key)
 
 const setSnakeDirection = () => {
 	if(activeKeys.player1.up && snake1.direction !== 'down') {
@@ -108,7 +139,11 @@ const setSnakeDirection = () => {
 }
 
 const setSnakePosition = () => {
-	if(snake1.direction) {
+	if(snake1.direction === 'up' && snake1.y - 1 < 0 || snake1.direction === 'down' && snake1.y + 1 >= Config.canvas.rows || snake1.direction === 'left' && snake1.x - 1 < 0 || snake1.direction === 'right' && snake1.x + 1 >= Config.canvas.columns) {
+		snake1.dead = true
+	}
+
+	if(snake1.direction && !snake1.dead) {
 		for(let i = snake1.food.length - 1; i >= 0; i--) {
 			const follow = i > 0 ? snake1.food[i - 1] : snake1
 			snake1.food[i].x = follow.x
@@ -116,20 +151,22 @@ const setSnakePosition = () => {
 		}
 	}
 
-	if(snake1.direction === 'up' && snake1.y > 0) {
+	if(snake1.direction === 'up' && !snake1.dead) {
 		snake1.y--
-	} else if(snake1.direction === 'down' && snake1.y < Config.canvas.columns - 1) {
+	} else if(snake1.direction === 'down' && !snake1.dead) {
 		snake1.y++
-	} else if(snake1.direction === 'left' && snake1.x > 0) {
+	} else if(snake1.direction === 'left' && !snake1.dead) {
 		snake1.x--
-	} else if(snake1.direction === 'right' && snake1.x < Config.canvas.rows - 1) {
+	} else if(snake1.direction === 'right' && !snake1.dead) {
 		snake1.x++
-	} else if(snake1.direction) {
-		gameOver()
 	}
 
 	if(Config.players > 1) {
-		if(snake2.direction) {
+		if(snake2.direction === 'up' && snake2.y - 1 < 0 || snake2.direction === 'down' && snake2.y + 1 >= Config.canvas.rows || snake2.direction === 'left' && snake2.x - 1 < 0 || snake2.direction === 'right' && snake2.x + 1 >= Config.canvas.columns) {
+			snake2.dead = true
+		}
+
+		if(snake2.direction && !snake2.dead) {
 			for(let i = snake2.food.length - 1; i >= 0; i--) {
 				const follow = i > 0 ? snake2.food[i - 1] : snake2
 				snake2.food[i].x = follow.x
@@ -137,16 +174,14 @@ const setSnakePosition = () => {
 			}
 		}
 
-		if(snake2.direction === 'up' && snake2.y > 0) {
+		if(snake2.direction === 'up' && !snake2.dead) {
 			snake2.y--
-		} else if(snake2.direction === 'down' && snake2.y < Config.canvas.columns - 1) {
+		} else if(snake2.direction === 'down' && !snake2.dead) {
 			snake2.y++
-		} else if(snake2.direction === 'left' && snake2.x > 0) {
+		} else if(snake2.direction === 'left' && !snake2.dead) {
 			snake2.x--
-		} else if(snake2.direction === 'right' && snake2.x < Config.canvas.rows - 1) {
+		} else if(snake2.direction === 'right' && !snake2.dead) {
 			snake2.x++
-		} else if(snake2.direction) {
-			gameOver()
 		}
 	}
 }
@@ -156,8 +191,8 @@ const generateFood = () => {
 		const x = parseInt(Math.random() * Config.canvas.columns),
 			y = parseInt(Math.random() * Config.canvas.rows)
 
-		generatedFood.x = x
-		generatedFood.y = y
+		generatedFood.x = x <= 0 ? 1 : x >= Config.canvas.columns - 1 ? Config.canvas.columns - 2 : x
+		generatedFood.y = y <= 0 ? 1 : y >= Config.canvas.rows - 1 ? Config.canvas.rows - 2 : y
 
 		Context.beginPath()
 		Context.fillStyle = '#AFA'
@@ -185,7 +220,7 @@ const checkCollisions = () => {
 
 	for(let food of snake1.food) {
 		if(food.x === snake1.x && food.y === snake1.y) {
-			gameOver()
+			snake1.dead = true
 			break
 		}
 	}
@@ -204,7 +239,7 @@ const checkCollisions = () => {
 
 		for(let food of snake2.food) {
 			if(food.x === snake2.x && food.y === snake2.y) {
-				gameOver()
+				snake2.dead = true
 				break
 			}
 		}
@@ -212,14 +247,27 @@ const checkCollisions = () => {
 }
 
 const engine = () => {
-	Context.beginPath()
-	Context.clearRect(0, 0, Config.canvas.width, Config.canvas.height)
-	if(snake1.direction && snake2.direction || Config.players < 2 && snake1.direction) generateFood()
-	checkCollisions()
-	setSnakeDirection()
-	setSnakePosition()
-	DrawSnake(snake1)
-	if(Config.players > 1) DrawSnake(snake2)
+	if(!snake1.dead && !snake2.dead) {
+		Context.beginPath()
+		Context.clearRect(0, 0, Config.canvas.width, Config.canvas.height)
+		if(snake1.direction && snake2.direction || Config.players < 2 && snake1.direction) {
+			generateFood()
+		}
+		checkCollisions()
+		setSnakeDirection()
+		setSnakePosition()
+		DrawSnake(snake1)
+		if(Config.players > 1) {
+			DrawSnake(snake2)
+		}
+	} else {
+		if(engineInterval) {
+			clearInterval(engineInterval)
+			DrawGameOver()
+		} else {
+			console.error('Cannot clear engine interval')
+		}
+	}
 }
 
 const init = () => {
@@ -227,8 +275,8 @@ const init = () => {
 		console.log('Starting engine...')
 		Canvas.width = Config.canvas.width
 		Canvas.height = Config.canvas.height
+		engineInterval = setInterval(() => engine(), Config.engineClock)
 		console.log('Engine started')
-		engineInterval = setInterval(() => engine(), Config.clock)
 	} else {
 		console.error('Fail to get canvas')
 	}

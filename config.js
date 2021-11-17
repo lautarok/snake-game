@@ -16,5 +16,5 @@ export default {
 		left2: 'a',
 		right2: 'd'
 	},
-	clock: 60
+	engineClock: 60
 }
